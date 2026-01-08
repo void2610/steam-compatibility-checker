@@ -12,8 +12,13 @@ Steam相性診断は、Steam Web APIとOpenID認証を活用してユーザー�
 graph TB
     A[ユーザー] --> B[Next.js フロントエンド]
     B --> C[Steam OpenID 認証]
-    B --> D[Steam Web API]
-    B --> E[結果シェア機能]
+    B --> D{環境判定}
+    D -->|開発環境| E[Next.js API Routes]
+    D -->|本番環境| F[CORSプロキシ]
+    E --> G[Steam Web API]
+    F --> G
+    B --> H[結果シェア機能]
+    B --> I[相性分析エンジン]
 ```
 
 ### 技術スタック
@@ -21,8 +26,10 @@ graph TB
 - **フロントエンド**: Next.js 14 (App Router)
 - **スタイリング**: Tailwind CSS
 - **認証**: Steam OpenID 2.0 (フロントエンド実装)
-- **API**: Steam Web API (直接呼び出し)
-- **デプロイメント**: Vercel (静的サイト)
+- **API アクセス**: 
+  - 開発環境: Next.js API Routes (サーバーサイドプロキシ)
+  - 本番環境: CORSプロキシサービス (allorigins.win)
+- **デプロイメント**: Vercel (静的サイト + サーバーレス関数)
 - **環境変数**: Steam Web API Key (ビルド時設定)
 - **状態管理**: React Context (セッション中のみ)
 - **HTTP クライアント**: fetch API
@@ -54,11 +61,13 @@ interface SteamUser {
 3. Steam認証ページでユーザーがログイン
 4. 認証成功後、コールバックURLでレスポンスを受信
 5. フロントエンドでOpenIDレスポンスを検証
-6. Steam IDを抽出してセッション状態に保存
+6. Steam IDを抽出
+7. **Steam APIからプロフィール情報を取得**（新規追加）
+8. 完全なユーザー情報をセッション状態に保存
 
 ### 2. Steam API インテグレーション
 
-#### SteamApiService
+#### SteamApiClientService (クライアントサイド)
 ```typescript
 interface GameLibrary {
   games: Game[];
@@ -75,12 +84,18 @@ interface Game {
   genres?: string[];
 }
 
-class SteamApiService {
-  async getOwnedGames(steamId: string, apiKey: string): Promise<GameLibrary>;
-  async getPlayerSummary(steamId: string, apiKey: string): Promise<SteamUser>;
-  async resolveVanityUrl(vanityUrl: string, apiKey: string): Promise<string>;
+class SteamApiClientService {
+  async getOwnedGames(steamId: string): Promise<GameLibrary>;
+  async getPlayerSummaries(steamIds: string[]): Promise<SteamUser[]>;
+  async resolveVanityUrl(vanityUrl: string): Promise<string>;
+  async resolveSteamId(input: string): Promise<string>;
 }
 ```
+
+#### API アクセス戦略
+- **開発環境**: Next.js API Routes (`/api/steam/*`) を使用してサーバーサイドでSteam APIを呼び出し
+- **本番環境**: CORSプロキシサービス (allorigins.win) を使用してクライアントサイドから呼び出し
+- **CORS問題の解決**: ブラウザの同一オリジンポリシーを回避するための環境別実装
 
 ### 3. 相性分析エンジン
 
@@ -124,13 +139,33 @@ class CompatibilityAnalyzer {
 
 ### 4. UI コンポーネント
 
-#### 主要コンポーネント
-- `LoginButton`: Steam認証ボタン
-- `UserProfile`: ユーザープロフィール表示
-- `LibraryDisplay`: ゲームライブラリ表示
+#### 認証関連コンポーネント
+- `LoginButton`: Steam認証ボタン（複数バリアント対応）
+- `UserProfile`: ユーザープロフィール表示（コンパクト/詳細表示）
+- `UserProfileCard`: 統計情報付きプロフィールカード
+- `AuthStateWrapper`: 認証状態に応じた条件付きレンダリング
+- `AuthErrorBoundary`: 認証エラーの包括的処理
+
+#### ゲームライブラリ関連コンポーネント
+- `GameLibraryDisplay`: ゲームライブラリ一覧表示
+  - 検索・フィルタリング機能
+  - ソート機能（名前順/プレイ時間順）
+  - ページネーション（「もっと見る」機能）
+  - ローディング状態とエラーハンドリング
+- `GameItem`: 個別ゲーム表示（通常/コンパクトモード）
+- `LibraryComparison`: 2つのライブラリの比較表示
+
+#### 相性診断関連コンポーネント
 - `CompatibilityForm`: 相性診断フォーム
-- `ResultsDisplay`: 結果表示コンポーネント
-- `CoopSuggestions`: co-opゲーム提案コンポーネント
+  - リアルタイム入力検証
+  - 複数入力形式対応（Steam ID、プロフィールURL、バニティURL）
+  - サンプル入力提案
+  - 詳細なエラーメッセージ
+- `QuickCompatibilityForm`: 簡易版診断フォーム
+
+#### 結果表示コンポーネント
+- `ResultsDisplay`: 相性分析結果の表示
+- `CoopSuggestions`: co-opゲーム提案表示
 - `ShareButton`: 結果シェア機能
 
 ## データモデル
@@ -245,6 +280,44 @@ interface GetPlayerSummariesResponse {
 <function_calls>
 <invoke name="prework">
 <parameter name="featureName">steam-compatibility-checker
+
+## CORS問題の解決
+
+### 問題
+Steam Web APIはCORS（Cross-Origin Resource Sharing）ヘッダーを提供しないため、ブラウザから直接呼び出すことができません。
+
+### 解決策
+環境に応じた二重戦略を採用：
+
+#### 開発環境
+- **Next.js API Routes** (`/api/steam/*`) を使用
+- サーバーサイドでSteam APIを呼び出すプロキシとして機能
+- `export const dynamic = 'force-dynamic'` でサーバーレス関数として実行
+
+#### 本番環境（静的サイト）
+- **CORSプロキシサービス** (allorigins.win) を使用
+- クライアントサイドから間接的にSteam APIにアクセス
+- 完全に静的サイトとして動作可能
+
+### 実装詳細
+```typescript
+class SteamApiClientService {
+  constructor() {
+    this.isDevelopment = process.env.NODE_ENV === 'development';
+    this.baseUrl = this.isDevelopment 
+      ? '/api/steam' 
+      : 'https://api.allorigins.win/raw?url=';
+  }
+  
+  async getOwnedGames(steamId: string): Promise<GameLibrary> {
+    if (this.isDevelopment) {
+      return this.getOwnedGamesDev(steamId);
+    } else {
+      return this.getOwnedGamesProd(steamId);
+    }
+  }
+}
+```
 
 ## エラーハンドリング
 

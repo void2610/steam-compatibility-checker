@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // 静的サイト生成の設定
-  output: 'export',
+  // 開発環境では動的、本番環境では静的サイト生成
+  output: process.env.NODE_ENV === 'production' ? 'export' : undefined,
   
   // 画像最適化を無効化（静的エクスポート時に必要）
   images: {

@@ -40,8 +40,16 @@ export class SteamApiService {
     retryStrategy?: RetryStrategy,
     cacheManager?: SteamApiCacheManager
   ) {
+    const resolvedApiKey = apiKey || env.steamApiKey || process.env.NEXT_PUBLIC_STEAM_API_KEY || '';
+    console.log('SteamApiService constructor:', {
+      providedApiKey: apiKey ? `${apiKey.substring(0, 8)}...` : 'not provided',
+      envApiKey: env.steamApiKey ? `${env.steamApiKey.substring(0, 8)}...` : 'not set',
+      processEnvApiKey: process.env.NEXT_PUBLIC_STEAM_API_KEY ? `${process.env.NEXT_PUBLIC_STEAM_API_KEY.substring(0, 8)}...` : 'not set',
+      resolvedApiKey: resolvedApiKey ? `${resolvedApiKey.substring(0, 8)}...` : 'not set'
+    });
+    
     this.config = {
-      apiKey: apiKey || env.steamApiKey,
+      apiKey: resolvedApiKey,
       baseUrl: 'https://api.steampowered.com',
       timeout: 10000,
       maxRetries: 3

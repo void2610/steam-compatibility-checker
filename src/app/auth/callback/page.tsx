@@ -52,18 +52,43 @@ function AuthCallbackContent() {
           throw steamIdError;
         }
 
-        // ユーザー情報を一時的に設定（プロフィール情報は後で取得）
-        const tempUser = {
-          steamId: authResult.steamId,
-          personaName: '',
-          avatarUrl: '',
-          profileUrl: `https://steamcommunity.com/profiles/${authResult.steamId}`,
-          communityVisibilityState: 0,
-        };
+        console.log('Steam ID抽出成功:', authResult.steamId);
 
-        setUser(tempUser);
+        // Steam APIからユーザー情報を取得
+        try {
+          const { steamApiClientService } = await import('@/services/steam-api-client');
+          const [userProfile] = await steamApiClientService.getPlayerSummaries([authResult.steamId]);
+          
+          if (userProfile) {
+            console.log('プロフィール取得成功:', userProfile.personaName);
+            setUser(userProfile);
+          } else {
+            // プロフィール取得に失敗した場合は基本情報のみ設定
+            console.warn('プロフィール取得失敗、基本情報のみ設定');
+            const tempUser = {
+              steamId: authResult.steamId,
+              personaName: `User ${authResult.steamId}`,
+              avatarUrl: '',
+              profileUrl: `https://steamcommunity.com/profiles/${authResult.steamId}`,
+              communityVisibilityState: 0,
+            };
+            setUser(tempUser);
+          }
+        } catch (profileError) {
+          console.warn('プロフィール取得エラー、基本情報のみ設定:', profileError);
+          // プロフィール取得に失敗しても認証は成功とみなす
+          const tempUser = {
+            steamId: authResult.steamId,
+            personaName: `User ${authResult.steamId}`,
+            avatarUrl: '',
+            profileUrl: `https://steamcommunity.com/profiles/${authResult.steamId}`,
+            communityVisibilityState: 0,
+          };
+          setUser(tempUser);
+        }
 
         // メインページにリダイレクト
+        console.log('認証完了、メインページにリダイレクト');
         router.push('/');
         
       } catch (err) {

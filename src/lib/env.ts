@@ -26,7 +26,13 @@ function getOptionalEnvVar(key: keyof EnvironmentVariables): string | undefined 
 // 環境設定オブジェクト
 export const env = {
   // Steam API Key（必須）
-  steamApiKey: getOptionalEnvVar('NEXT_PUBLIC_STEAM_API_KEY') || '',
+  steamApiKey: (() => {
+    const key = getOptionalEnvVar('NEXT_PUBLIC_STEAM_API_KEY') || '';
+    if (typeof window !== 'undefined') {
+      console.log('Client-side Steam API Key:', key ? `${key.substring(0, 8)}...` : 'not set');
+    }
+    return key;
+  })(),
   
   // アプリケーションURL（必須）
   appUrl: getOptionalEnvVar('NEXT_PUBLIC_APP_URL') || 'http://localhost:3000',
@@ -66,5 +72,7 @@ export function validateEnvironment(): void {
 if (env.isDevelopment) {
   if (!env.steamApiKey) {
     console.warn('⚠️  NEXT_PUBLIC_STEAM_API_KEY is not set. Steam API calls will fail.');
+  } else {
+    console.log('✅ Steam API Key loaded:', env.steamApiKey.substring(0, 8) + '...');
   }
 }
