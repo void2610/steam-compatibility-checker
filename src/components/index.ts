@@ -11,3 +11,22 @@ export {
   CompatibilityForm, 
   QuickCompatibilityForm 
 } from './CompatibilityForm';
+export {
+  UserComparisonCard,
+  CentralResultsPanel,
+  CompatibilityResultsLayout,
+  DualUserSetup,
+  DualUserInterface,
+  CoopSuggestions,
+  type UserPosition
+} from './DualUserInterface';
+export {
+  ResponsiveContainer,
+  ResponsiveGrid,
+  MobileStack,
+  ConditionalRender,
+  ResponsiveText,
+  ResponsiveCard,
+  useScreenSize,
+  type ScreenSize
+} from './ResponsiveLayout';
