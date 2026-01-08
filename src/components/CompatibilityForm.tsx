@@ -48,13 +48,33 @@ export function CompatibilityForm({ onResult, onError, className = '' }: Compati
       return { isValid: false, error: 'Steam IDまたはプロフィールURLを入力してください' };
     }
 
-    // 自分自身のIDをチェック
-    if (currentUser && (
-      trimmedInput === currentUser.steamId ||
-      trimmedInput.includes(currentUser.steamId) ||
-      trimmedInput.includes(currentUser.profileUrl?.split('/').pop() || '')
-    )) {
-      return { isValid: false, error: '自分自身との相性診断はできません' };
+    // 自分自身のIDをチェック - より厳密な比較
+    if (currentUser) {
+      // Steam IDの直接比較
+      if (trimmedInput === currentUser.steamId) {
+        return { isValid: false, error: '自分自身との相性診断はできません' };
+      }
+
+      // プロフィールURLに自分のSteam IDが含まれているかチェック
+      if (trimmedInput.includes(`/profiles/${currentUser.steamId}`)) {
+        return { isValid: false, error: '自分自身との相性診断はできません' };
+      }
+
+      // カスタムURLの場合の比較（profileUrlが存在する場合のみ）
+      if (currentUser.profileUrl) {
+        const profileUrlParts = currentUser.profileUrl.split('/');
+        const customId = profileUrlParts[profileUrlParts.length - 1];
+        
+        // カスタムIDの直接比較（空文字列でない場合のみ）
+        if (customId && customId !== currentUser.steamId && trimmedInput === customId) {
+          return { isValid: false, error: '自分自身との相性診断はできません' };
+        }
+
+        // プロフィールURLに自分のカスタムIDが含まれているかチェック
+        if (customId && customId !== currentUser.steamId && trimmedInput.includes(`/id/${customId}`)) {
+          return { isValid: false, error: '自分自身との相性診断はできません' };
+        }
+      }
     }
 
     // Steam ID形式（17桁の数字）
@@ -117,6 +137,7 @@ export function CompatibilityForm({ onResult, onError, className = '' }: Compati
     try {
       console.log('相性診断開始:', {
         currentUser: currentUser.steamId,
+        currentUserProfile: currentUser.profileUrl,
         targetInput: formState.steamIdInput.value
       });
 
@@ -124,6 +145,11 @@ export function CompatibilityForm({ onResult, onError, className = '' }: Compati
       console.log('Steam ID解決中...');
       const targetSteamId = await steamApiClientService.resolveSteamId(formState.steamIdInput.value);
       console.log('解決されたSteam ID:', targetSteamId);
+      
+      // 解決されたSteam IDが自分自身でないことを最終確認
+      if (targetSteamId === currentUser.steamId) {
+        throw new Error('自分自身との相性診断はできません');
+      }
       
       // ターゲットユーザーの情報を取得
       console.log('ユーザー情報取得中...');
@@ -211,7 +237,7 @@ export function CompatibilityForm({ onResult, onError, className = '' }: Compati
               value={formState.steamIdInput.value}
               onChange={(e) => handleInputChange(e.target.value)}
               placeholder="例: 76561198000000000 または https://steamcommunity.com/id/username"
-              className={`block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 formState.steamIdInput.touched
                   ? formState.steamIdInput.isValid
                     ? 'border-green-300 focus:border-green-500'
@@ -384,7 +410,7 @@ export function QuickCompatibilityForm({ onSubmit, isLoading = false, className 
           value={steamId}
           onChange={(e) => handleInputChange(e.target.value)}
           placeholder="Steam ID または プロフィールURL"
-          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           disabled={isLoading}
         />
       </div>

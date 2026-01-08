@@ -384,11 +384,11 @@ export function UserComparisonCard({
                       <span className="text-gray-400 font-medium w-4">
                         {index + 1}.
                       </span>
-                      <span className="font-medium truncate">
+                      <span className="font-medium truncate text-gray-900">
                         {game.name}
                       </span>
                     </div>
-                    <span className="text-gray-500 text-xs">
+                    <span className="text-gray-600 text-xs">
                       {formatPlaytime(game.playtimeForever)}
                     </span>
                   </div>
