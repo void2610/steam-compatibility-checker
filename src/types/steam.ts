@@ -75,7 +75,7 @@ export interface ResolveVanityUrlResponse {
 }
 
 // Steam API エラー型
-export interface SteamApiError {
+export interface SteamApiErrorInfo {
   code: string;
   message: string;
   retryable: boolean;
