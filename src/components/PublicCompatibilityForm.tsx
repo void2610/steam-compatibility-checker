@@ -312,8 +312,59 @@ export function PublicCompatibilityForm({
               <li>カスタムURL: https://steamcommunity.com/id/[カスタム名] または カスタム名のみ</li>
             </ul>
           </div>
+        </div>
 
-        {/* 送信エラー */}
+        {/* ユーザー2入力フィールド */}
+        <div>
+          <label htmlFor="user2SteamId" className="block text-sm font-medium text-gray-700 mb-2">
+            ユーザー2 - Steam ID / プロフィールURL
+          </label>
+          <div className="relative">
+            <input
+              id="user2SteamId"
+              type="text"
+              value={formState.user2Input.value}
+              onChange={(e) => handleInputChange('user2Input', e.target.value)}
+              placeholder="例: 76561198000000000 または https://steamcommunity.com/id/username"
+              className={`block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                formState.user2Input.touched
+                  ? formState.user2Input.isValid
+                    ? 'border-green-300 focus:border-green-500'
+                    : 'border-red-300 focus:border-red-500'
+                  : 'border-gray-300 focus:border-blue-500'
+              }`}
+              disabled={formState.isSubmitting}
+            />
+            {formState.user2Input.touched && (
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                {formState.user2Input.isValid ? (
+                  <svg className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                )}
+              </div>
+            )}
+          </div>
+          
+          {/* エラーメッセージ */}
+          {formState.user2Input.touched && formState.user2Input.error && (
+            <p className="mt-1 text-sm text-red-600">{formState.user2Input.error}</p>
+          )}
+        </div>
+
+        {/* ヘルプテキスト */}
+        <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-md">
+          <p className="mb-1">以下の形式で入力できます:</p>
+          <ul className="list-disc list-inside space-y-1 ml-2">
+            <li>Steam ID: 17桁の数字（例: 76561198000000000）</li>
+            <li>プロフィールURL: https://steamcommunity.com/profiles/[Steam ID]</li>
+            <li>カスタムURL: https://steamcommunity.com/id/[カスタム名] または カスタム名のみ</li>
+          </ul>
+        </div>
         {formState.submitError && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-md">
             <div className="flex items-start">

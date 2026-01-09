@@ -2,16 +2,13 @@ import { GameLibrary, SteamUser } from '@/types/steam';
 
 /**
  * クライアントサイド用Steam APIサービス
- * 開発環境: Next.js API Routesを使用
- * 本番環境: CORSプロキシを使用
+ * CORSプロキシを使用してSteam APIにアクセス
  */
 export class SteamApiClientService {
   private baseUrl: string;
-  private isDevelopment: boolean;
 
   constructor() {
-    this.isDevelopment = process.env.NODE_ENV === 'development';
-    this.baseUrl = this.isDevelopment ? '/api/steam' : 'https://api.allorigins.win/raw?url=';
+    this.baseUrl = 'https://api.allorigins.win/raw?url=';
   }
 
   /**
@@ -21,45 +18,6 @@ export class SteamApiClientService {
     steamId: string,
     includeAppInfo: boolean = true,
     includePlayedFreeGames: boolean = true
-  ): Promise<GameLibrary> {
-    if (this.isDevelopment) {
-      return this.getOwnedGamesDev(steamId, includeAppInfo, includePlayedFreeGames);
-    } else {
-      return this.getOwnedGamesProd(steamId, includeAppInfo, includePlayedFreeGames);
-    }
-  }
-
-  /**
-   * 開発環境用: API Routes経由
-   */
-  private async getOwnedGamesDev(
-    steamId: string,
-    includeAppInfo: boolean,
-    includePlayedFreeGames: boolean
-  ): Promise<GameLibrary> {
-    const params = new URLSearchParams({
-      steamid: steamId,
-      include_appinfo: includeAppInfo ? '1' : '0',
-      include_played_free_games: includePlayedFreeGames ? '1' : '0'
-    });
-
-    const response = await fetch(`${this.baseUrl}/owned-games?${params}`);
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to fetch owned games');
-    }
-
-    return response.json();
-  }
-
-  /**
-   * 本番環境用: CORSプロキシ経由
-   */
-  private async getOwnedGamesProd(
-    steamId: string,
-    includeAppInfo: boolean,
-    includePlayedFreeGames: boolean
   ): Promise<GameLibrary> {
     const apiKey = process.env.NEXT_PUBLIC_STEAM_API_KEY;
     if (!apiKey) {
@@ -114,35 +72,6 @@ export class SteamApiClientService {
    * プレイヤーのサマリー情報を取得
    */
   async getPlayerSummaries(steamIds: string[]): Promise<SteamUser[]> {
-    if (this.isDevelopment) {
-      return this.getPlayerSummariesDev(steamIds);
-    } else {
-      return this.getPlayerSummariesProd(steamIds);
-    }
-  }
-
-  /**
-   * 開発環境用: API Routes経由
-   */
-  private async getPlayerSummariesDev(steamIds: string[]): Promise<SteamUser[]> {
-    const params = new URLSearchParams({
-      steamids: steamIds.join(',')
-    });
-
-    const response = await fetch(`${this.baseUrl}/player-summaries?${params}`);
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to fetch player summaries');
-    }
-
-    return response.json();
-  }
-
-  /**
-   * 本番環境用: CORSプロキシ経由
-   */
-  private async getPlayerSummariesProd(steamIds: string[]): Promise<SteamUser[]> {
     const apiKey = process.env.NEXT_PUBLIC_STEAM_API_KEY;
     if (!apiKey) {
       throw new Error('Steam API key is not configured');
@@ -179,37 +108,6 @@ export class SteamApiClientService {
    * バニティURLからSteam IDを解決
    */
   async resolveVanityUrl(vanityUrl: string, urlType: number = 1): Promise<string> {
-    if (this.isDevelopment) {
-      return this.resolveVanityUrlDev(vanityUrl, urlType);
-    } else {
-      return this.resolveVanityUrlProd(vanityUrl, urlType);
-    }
-  }
-
-  /**
-   * 開発環境用: API Routes経由
-   */
-  private async resolveVanityUrlDev(vanityUrl: string, urlType: number): Promise<string> {
-    const params = new URLSearchParams({
-      vanityurl: vanityUrl,
-      url_type: urlType.toString()
-    });
-
-    const response = await fetch(`${this.baseUrl}/resolve-vanity-url?${params}`);
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to resolve vanity URL');
-    }
-
-    const data = await response.json();
-    return data.steamid;
-  }
-
-  /**
-   * 本番環境用: CORSプロキシ経由
-   */
-  private async resolveVanityUrlProd(vanityUrl: string, urlType: number): Promise<string> {
     const apiKey = process.env.NEXT_PUBLIC_STEAM_API_KEY;
     if (!apiKey) {
       throw new Error('Steam API key is not configured');
