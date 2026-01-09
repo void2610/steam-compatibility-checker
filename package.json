@@ -12,6 +12,7 @@
     "build:static": "next build"
   },
   "dependencies": {
+    "@vercel/analytics": "^1.6.1",
     "next": "16.1.1",
     "node-fetch": "^2.7.0",
     "react": "19.2.3",
