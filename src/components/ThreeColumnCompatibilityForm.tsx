@@ -255,96 +255,144 @@ export function ThreeColumnCompatibilityForm({
 
   const isFormValid = formState.user1Input.isValid && formState.user2Input.isValid && !formState.isSubmitting;
 
-  // モバイル表示: 縦積みレイアウト
+  // モバイル表示: 1カードにすべてまとめる
   if (screenSize === 'mobile') {
     return (
-      <div className={`space-y-4 ${className}`}>
-        {/* ユーザー1入力 */}
-        <UserInputCard
-          userNumber={1}
-          value={formState.user1Input.value}
-          isValid={formState.user1Input.isValid}
-          error={formState.user1Input.error}
-          touched={formState.user1Input.touched}
-          onChange={(value) => handleInputChange('user1Input', value)}
-          disabled={formState.isSubmitting}
-        />
-
-        {/* 中央パネル */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">相性診断</h3>
-            
-            {/* 送信エラー */}
-            {formState.submitError && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-sm text-red-700">{formState.submitError}</p>
-              </div>
-            )}
-
-            {/* 送信ボタン */}
-            <button
-              onClick={handleSubmit}
-              disabled={!isFormValid}
-              className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-            >
-              {formState.isSubmitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>診断中...</span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  <span>相性診断を実行</span>
-                </>
-              )}
-            </button>
+      <div className={className}>
+        <div className="bg-white rounded-lg shadow-sm border p-4">
+          {/* ヘッダー */}
+          <div className="text-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Steam相性診断</h3>
+            <p className="text-xs text-gray-500 mt-1">2人のSteam IDを入力して診断</p>
           </div>
+
+          {/* ユーザー1入力 */}
+          <div className="mb-4">
+            <label htmlFor="mobileUser1SteamId" className="block text-sm font-medium text-gray-700 mb-1">
+              ユーザー1
+            </label>
+            <div className="relative">
+              <input
+                id="mobileUser1SteamId"
+                type="text"
+                value={formState.user1Input.value}
+                onChange={(e) => handleInputChange('user1Input', e.target.value)}
+                placeholder="Steam ID / プロフィールURL"
+                className={`block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  formState.user1Input.touched
+                    ? formState.user1Input.isValid
+                      ? 'border-green-300 focus:border-green-500'
+                      : 'border-red-300 focus:border-red-500'
+                    : 'border-gray-300 focus:border-blue-500'
+                }`}
+                disabled={formState.isSubmitting}
+              />
+              {formState.user1Input.touched && (
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  {formState.user1Input.isValid ? (
+                    <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <svg className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  )}
+                </div>
+              )}
+            </div>
+            {formState.user1Input.touched && formState.user1Input.error && (
+              <p className="mt-1 text-xs text-red-600">{formState.user1Input.error}</p>
+            )}
+          </div>
+
+          {/* ユーザー2入力 */}
+          <div className="mb-4">
+            <label htmlFor="mobileUser2SteamId" className="block text-sm font-medium text-gray-700 mb-1">
+              ユーザー2
+            </label>
+            <div className="relative">
+              <input
+                id="mobileUser2SteamId"
+                type="text"
+                value={formState.user2Input.value}
+                onChange={(e) => handleInputChange('user2Input', e.target.value)}
+                placeholder="Steam ID / プロフィールURL"
+                className={`block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  formState.user2Input.touched
+                    ? formState.user2Input.isValid
+                      ? 'border-green-300 focus:border-green-500'
+                      : 'border-red-300 focus:border-red-500'
+                    : 'border-gray-300 focus:border-blue-500'
+                }`}
+                disabled={formState.isSubmitting}
+              />
+              {formState.user2Input.touched && (
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  {formState.user2Input.isValid ? (
+                    <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <svg className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  )}
+                </div>
+              )}
+            </div>
+            {formState.user2Input.touched && formState.user2Input.error && (
+              <p className="mt-1 text-xs text-red-600">{formState.user2Input.error}</p>
+            )}
+          </div>
+
+          {/* 送信エラー */}
+          {formState.submitError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-700">{formState.submitError}</p>
+            </div>
+          )}
+
+          {/* 診断ボタン */}
+          <button
+            onClick={handleSubmit}
+            disabled={!isFormValid}
+            className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+          >
+            {formState.isSubmitting ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>診断中...</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span>相性診断を実行</span>
+              </>
+            )}
+          </button>
 
           {/* 診断中の進捗表示 */}
           {formState.isSubmitting && (
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
               <div className="text-center">
-                <h4 className="text-sm font-medium text-blue-900 mb-2">診断進行中...</h4>
                 <div className="text-xs text-blue-700 space-y-1">
                   <div className={formState.currentStep === 'resolving' ? 'font-medium' : ''}>
                     {formState.currentStep === 'resolving' ? '⏳' : '✓'} Steam IDを解決中
                   </div>
                   <div className={formState.currentStep === 'fetching' ? 'font-medium' : ''}>
-                    {['fetching', 'analyzing'].includes(formState.currentStep) ? '⏳' : formState.currentStep === 'input' ? '' : '✓'} ユーザー情報とライブラリを取得中
+                    {['fetching', 'analyzing'].includes(formState.currentStep) ? '⏳' : formState.currentStep === 'input' ? '' : '✓'} データ取得中
                   </div>
                   <div className={formState.currentStep === 'analyzing' ? 'font-medium' : ''}>
-                    {formState.currentStep === 'analyzing' ? '⏳' : ''} 相性分析を実行中
+                    {formState.currentStep === 'analyzing' ? '⏳' : ''} 分析中
                   </div>
                 </div>
-                {formState.progress && (
-                  <div className="mt-2 text-blue-600 font-medium text-sm">
-                    {formState.progress}
-                  </div>
-                )}
               </div>
             </div>
           )}
         </div>
-
-        {/* ユーザー2入力 */}
-        <UserInputCard
-          userNumber={2}
-          value={formState.user2Input.value}
-          isValid={formState.user2Input.isValid}
-          error={formState.user2Input.error}
-          touched={formState.user2Input.touched}
-          onChange={(value) => handleInputChange('user2Input', value)}
-          disabled={formState.isSubmitting}
-        />
       </div>
     );
   }
