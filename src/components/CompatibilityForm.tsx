@@ -210,11 +210,6 @@ export function CompatibilityForm({ onResult, onError, className = '' }: Compati
     }
   }, [currentUser, formState.steamIdInput, onResult, onError]);
 
-  // サンプル入力の設定
-  const setSampleInput = useCallback((sample: string) => {
-    handleInputChange(sample);
-  }, [handleInputChange]);
-
   return (
     <div className={`bg-white rounded-lg shadow-sm border p-6 ${className}`}>
       <div className="mb-6">
@@ -275,27 +270,6 @@ export function CompatibilityForm({ onResult, onError, className = '' }: Compati
               <li>カスタムURL: https://steamcommunity.com/id/[カスタム名] または カスタム名のみ</li>
             </ul>
           </div>
-        </div>
-
-        {/* サンプル入力ボタン */}
-        <div className="flex flex-wrap gap-2">
-          <span className="text-xs text-gray-500">サンプル:</span>
-          <button
-            type="button"
-            onClick={() => setSampleInput('gaben')}
-            className="text-xs text-blue-600 hover:text-blue-800 underline"
-            disabled={formState.isSubmitting}
-          >
-            gaben
-          </button>
-          <button
-            type="button"
-            onClick={() => setSampleInput('https://steamcommunity.com/id/robinwalker')}
-            className="text-xs text-blue-600 hover:text-blue-800 underline"
-            disabled={formState.isSubmitting}
-          >
-            Robin Walker
-          </button>
         </div>
 
         {/* 送信エラー */}

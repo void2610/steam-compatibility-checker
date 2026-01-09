@@ -1,15 +1,5 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-
-// フォーム入力状態の型定義
-interface FormInputState {
-  value: string;
-  isValid: boolean;
-  error?: string;
-  touched: boolean;
-}
-
 // ユーザー入力カードのProps
 interface UserInputCardProps {
   userNumber: 1 | 2;
@@ -32,52 +22,6 @@ export function UserInputCard({
   disabled = false,
   className = ''
 }: UserInputCardProps) {
-  // Steam ID/URLの検証
-  const validateSteamId = useCallback((input: string): { isValid: boolean; error?: string } => {
-    const trimmedInput = input.trim();
-    
-    if (!trimmedInput) {
-      return { isValid: false, error: 'Steam IDまたはプロフィールURLを入力してください' };
-    }
-
-    // Steam ID形式（17桁の数字）
-    if (/^\d{17}$/.test(trimmedInput)) {
-      return { isValid: true };
-    }
-
-    // プロフィールURL形式
-    if (trimmedInput.includes('steamcommunity.com/')) {
-      if (trimmedInput.includes('/profiles/') || trimmedInput.includes('/id/')) {
-        return { isValid: true };
-      }
-      return { isValid: false, error: '有効なSteamプロフィールURLを入力してください' };
-    }
-
-    // バニティURL形式（英数字、アンダースコア、ハイフンのみ）
-    if (/^[a-zA-Z0-9_-]+$/.test(trimmedInput) && trimmedInput.length >= 3) {
-      return { isValid: true };
-    }
-
-    return { 
-      isValid: false, 
-      error: 'Steam ID（17桁の数字）、プロフィールURL、またはカスタムURLを入力してください' 
-    };
-  }, []);
-
-  // サンプル入力の設定
-  const setSampleInput = useCallback((sample: string) => {
-    onChange(sample);
-  }, [onChange]);
-
-  const samples = userNumber === 1 
-    ? [
-        { label: 'gaben', value: 'gaben' },
-        { label: 'Robin Walker', value: 'https://steamcommunity.com/id/robinwalker' }
-      ]
-    : [
-        { label: 'valve', value: 'valve' },
-        { label: 'John Carmack', value: 'https://steamcommunity.com/id/johnc' }
-      ];
 
   return (
     <div className={`bg-white rounded-lg shadow-sm border p-6 ${className}`}>
@@ -139,33 +83,17 @@ export function UserInputCard({
           )}
         </div>
 
-        {/* サンプル入力ボタン */}
-        <div>
-          <span className="text-xs text-gray-500 block mb-2">サンプル:</span>
-          <div className="space-y-2">
-            {samples.map((sample, index) => (
-              <button
-                key={index}
-                type="button"
-                onClick={() => setSampleInput(sample.value)}
-                className="block w-full text-left px-3 py-2 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
-                disabled={disabled}
-              >
-                {sample.label}
-              </button>
-            ))}
-          </div>
-        </div>
 
-        {/* ヘルプテキスト */}
-        <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-md">
-          <p className="mb-1">入力可能な形式:</p>
-          <ul className="list-disc list-inside space-y-1 ml-2">
-            <li>Steam ID: 17桁の数字</li>
-            <li>プロフィールURL</li>
-            <li>カスタムURL</li>
-          </ul>
-        </div>
+
+          {/* ヘルプテキスト */}
+          <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-md">
+            <p className="mb-1">入力可能な形式:</p>
+            <ul className="list-disc list-inside space-y-1 ml-2">
+              <li>Steam ID: 17桁の数字</li>
+              <li>プロフィールURL</li>
+              <li>カスタムURL</li>
+            </ul>
+          </div>
       </div>
     </div>
   );

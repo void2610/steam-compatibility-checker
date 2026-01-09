@@ -162,10 +162,18 @@ export function PublicCompatibilityForm({
       
       // ユーザー情報を取得
       updateProgress('fetching', 'ユーザー情報を取得中...');
-      const [user1, user2] = await steamApiClientService.getPlayerSummaries([user1SteamId, user2SteamId]);
+      const users = await steamApiClientService.getPlayerSummaries([user1SteamId, user2SteamId]);
+      
+      if (!users || users.length < 2) {
+        throw new Error('ユーザー情報を取得できませんでした');
+      }
+      
+      // Steam IDでユーザーを正しくマッピング
+      const user1 = users.find(u => u.steamId === user1SteamId);
+      const user2 = users.find(u => u.steamId === user2SteamId);
       
       if (!user1 || !user2) {
-        throw new Error('ユーザー情報を取得できませんでした');
+        throw new Error('ユーザー情報のマッピングに失敗しました');
       }
       
       console.log('ユーザー情報取得完了:', { 
@@ -242,11 +250,6 @@ export function PublicCompatibilityForm({
     }
   }, [formState.user1Input, formState.user2Input, onResult, onError, onLoadingChange, updateProgress]);
 
-  // サンプル入力の設定
-  const setSampleInput = useCallback((field: 'user1Input' | 'user2Input', sample: string) => {
-    handleInputChange(field, sample);
-  }, [handleInputChange]);
-
   const isFormValid = formState.user1Input.isValid && formState.user2Input.isValid && !formState.isSubmitting;
 
   return (
@@ -300,100 +303,15 @@ export function PublicCompatibilityForm({
             <p className="mt-1 text-sm text-red-600">{formState.user1Input.error}</p>
           )}
           
-          {/* サンプル入力ボタン */}
-          <div className="mt-2 flex flex-wrap gap-2">
-            <span className="text-xs text-gray-500">サンプル:</span>
-            <button
-              type="button"
-              onClick={() => setSampleInput('user1Input', 'gaben')}
-              className="text-xs text-blue-600 hover:text-blue-800 underline"
-              disabled={formState.isSubmitting}
-            >
-              gaben
-            </button>
-            <button
-              type="button"
-              onClick={() => setSampleInput('user1Input', 'https://steamcommunity.com/id/robinwalker')}
-              className="text-xs text-blue-600 hover:text-blue-800 underline"
-              disabled={formState.isSubmitting}
-            >
-              Robin Walker
-            </button>
+          {/* ヘルプテキスト */}
+          <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-md">
+            <p className="mb-1">以下の形式で入力できます:</p>
+            <ul className="list-disc list-inside space-y-1 ml-2">
+              <li>Steam ID: 17桁の数字（例: 76561198000000000）</li>
+              <li>プロフィールURL: https://steamcommunity.com/profiles/[Steam ID]</li>
+              <li>カスタムURL: https://steamcommunity.com/id/[カスタム名] または カスタム名のみ</li>
+            </ul>
           </div>
-        </div>
-
-        {/* ユーザー2入力フィールド */}
-        <div>
-          <label htmlFor="user2SteamId" className="block text-sm font-medium text-gray-700 mb-2">
-            ユーザー2 - Steam ID / プロフィールURL
-          </label>
-          <div className="relative">
-            <input
-              id="user2SteamId"
-              type="text"
-              value={formState.user2Input.value}
-              onChange={(e) => handleInputChange('user2Input', e.target.value)}
-              placeholder="例: 76561198000000000 または https://steamcommunity.com/id/username"
-              className={`block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                formState.user2Input.touched
-                  ? formState.user2Input.isValid
-                    ? 'border-green-300 focus:border-green-500'
-                    : 'border-red-300 focus:border-red-500'
-                  : 'border-gray-300 focus:border-blue-500'
-              }`}
-              disabled={formState.isSubmitting}
-            />
-            {formState.user2Input.touched && (
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                {formState.user2Input.isValid ? (
-                  <svg className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : (
-                  <svg className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                )}
-              </div>
-            )}
-          </div>
-          
-          {/* エラーメッセージ */}
-          {formState.user2Input.touched && formState.user2Input.error && (
-            <p className="mt-1 text-sm text-red-600">{formState.user2Input.error}</p>
-          )}
-          
-          {/* サンプル入力ボタン */}
-          <div className="mt-2 flex flex-wrap gap-2">
-            <span className="text-xs text-gray-500">サンプル:</span>
-            <button
-              type="button"
-              onClick={() => setSampleInput('user2Input', 'valve')}
-              className="text-xs text-blue-600 hover:text-blue-800 underline"
-              disabled={formState.isSubmitting}
-            >
-              valve
-            </button>
-            <button
-              type="button"
-              onClick={() => setSampleInput('user2Input', 'https://steamcommunity.com/id/johnc')}
-              className="text-xs text-blue-600 hover:text-blue-800 underline"
-              disabled={formState.isSubmitting}
-            >
-              John Carmack
-            </button>
-          </div>
-        </div>
-
-        {/* ヘルプテキスト */}
-        <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-md">
-          <p className="mb-1">以下の形式で入力できます:</p>
-          <ul className="list-disc list-inside space-y-1 ml-2">
-            <li>Steam ID: 17桁の数字（例: 76561198000000000）</li>
-            <li>プロフィールURL: https://steamcommunity.com/profiles/[Steam ID]</li>
-            <li>カスタムURL: https://steamcommunity.com/id/[カスタム名] または カスタム名のみ</li>
-          </ul>
-        </div>
 
         {/* 送信エラー */}
         {formState.submitError && (

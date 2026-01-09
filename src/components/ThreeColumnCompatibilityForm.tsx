@@ -165,10 +165,18 @@ export function ThreeColumnCompatibilityForm({
       
       // ユーザー情報を取得
       updateProgress('fetching', 'ユーザー情報を取得中...');
-      const [user1, user2] = await steamApiClientService.getPlayerSummaries([user1SteamId, user2SteamId]);
+      const users = await steamApiClientService.getPlayerSummaries([user1SteamId, user2SteamId]);
+      
+      if (!users || users.length < 2) {
+        throw new Error('ユーザー情報を取得できませんでした');
+      }
+      
+      // Steam IDでユーザーを正しくマッピング
+      const user1 = users.find(u => u.steamId === user1SteamId);
+      const user2 = users.find(u => u.steamId === user2SteamId);
       
       if (!user1 || !user2) {
-        throw new Error('ユーザー情報を取得できませんでした');
+        throw new Error('ユーザー情報のマッピングに失敗しました');
       }
       
       console.log('ユーザー情報取得完了:', { 
